@@ -1,0 +1,78 @@
+{
+  "dataset_file": "data/train.csv",
+  "rows": 614,
+  "columns": 13,
+  "target_counts": {
+    "Y": 422,
+    "N": 192
+  },
+  "missing_by_column": {
+    "Loan_ID": 0,
+    "Gender": 13,
+    "Married": 3,
+    "Dependents": 15,
+    "Education": 0,
+    "Self_Employed": 32,
+    "ApplicantIncome": 0,
+    "CoapplicantIncome": 0,
+    "LoanAmount": 22,
+    "Loan_Amount_Term": 14,
+    "Credit_History": 50,
+    "Property_Area": 0,
+    "Loan_Status": 0
+  },
+  "exact_duplicate_rows": 0,
+  "duplicate_loan_ids": 0,
+  "numeric_summary": {
+    "ApplicantIncome": {
+      "count": 614.0,
+      "mean": 5403.459,
+      "std": 6109.042,
+      "min": 150.0,
+      "25%": 2877.5,
+      "50%": 3812.5,
+      "75%": 5795.0,
+      "max": 81000.0
+    },
+    "CoapplicantIncome": {
+      "count": 614.0,
+      "mean": 1621.246,
+      "std": 2926.248,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 1188.5,
+      "75%": 2297.25,
+      "max": 41667.0
+    },
+    "LoanAmount": {
+      "count": 592.0,
+      "mean": 146.412,
+      "std": 85.587,
+      "min": 9.0,
+      "25%": 100.0,
+      "50%": 128.0,
+      "75%": 168.0,
+      "max": 700.0
+    },
+    "Loan_Amount_Term": {
+      "count": 600.0,
+      "mean": 342.0,
+      "std": 65.12,
+      "min": 12.0,
+      "25%": 360.0,
+      "50%": 360.0,
+      "75%": 360.0,
+      "max": 480.0
+    },
+    "Credit_History": {
+      "count": 564.0,
+      "mean": 0.842,
+      "std": 0.365,
+      "min": 0.0,
+      "25%": 1.0,
+      "50%": 1.0,
+      "75%": 1.0,
+      "max": 1.0
+    }
+  }
+}

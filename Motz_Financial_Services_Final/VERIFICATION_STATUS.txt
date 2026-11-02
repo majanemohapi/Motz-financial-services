@@ -1,0 +1,19 @@
+Motz Financial Services — Verification Status
+Date: 1 November 2026
+
+Passed in the build environment:
+- Uploaded train.csv opens as 614 rows x 13 columns.
+- Dataset audit and four data-driven PNG figures regenerate successfully.
+- Dashboard JavaScript passes Node.js syntax checking.
+- Fixed target leakage: the known class label is removed before feature scoring in holdout predictions.
+- Added a Prolog health endpoint, connection-aware dashboard status, and Windows one-click launcher.
+- Academic report DOCX and 9-slide PowerPoint PPTX files are present.
+- Project ZIP contents are checked after packaging.
+
+Not verified in this environment:
+- SWI-Prolog is not installed in this build environment, so main.pl could not be executed and HTTP endpoints/model metrics could not be runtime-tested.
+- The dashboard has not been verified in a browser against a live SWI-Prolog server.
+- Live metric values must be captured from the running system; no values have been fabricated.
+
+Release gate:
+Run `RUN_MOTZ.bat` or `swipl -q -s main.pl` from the project root on the Windows demonstration machine. Confirm startup, dashboard, prediction, `/api/performance`, `/api/analysis`, and `/api/data_quality` before describing the project as fully tested. Do not use the lecturer's out-of-sample dataset until presentation day.

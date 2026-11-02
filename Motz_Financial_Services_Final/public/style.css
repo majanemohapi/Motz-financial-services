@@ -1,0 +1,682 @@
+
+/* =========================================================
+   MOTZ FINANCIAL SERVICES
+   Loan Prediction System
+   Main Stylesheet
+   ========================================================= */
+
+
+/* =========================================================
+   1. GLOBAL RESET AND BASE STYLES
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: #f4f7fc;
+    color: #14264b;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   2. SIDEBAR AND BRANDING
+   ========================================================= */
+
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 240px;
+    background: linear-gradient(160deg, #10284c, #10203c);
+    color: white;
+    padding: 22px 13px;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.brand {
+    height: 68px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 0 12px 25px;
+    border-bottom: 1px solid #294061;
+}
+
+.logo {
+    font-size: 36px;
+    color: #d5e5ff;
+}
+
+.brand b {
+    font-size: 27px;
+    letter-spacing: 4px;
+}
+
+.brand small {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 2px;
+}
+
+
+/* =========================================================
+   3. NAVIGATION
+   ========================================================= */
+
+nav {
+    display: grid;
+    gap: 8px;
+    margin-top: 25px;
+}
+
+nav a {
+    padding: 13px 12px;
+    color: #eaf1ff;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+nav a:hover {
+    background: #2475f5;
+    transform: translateX(3px);
+}
+
+nav .active {
+    background: #2475f5;
+}
+
+.sidefoot {
+    margin-top: auto;
+    padding: 12px;
+    color: #dbe7ff;
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   4. MAIN CONTENT AND HEADER
+   ========================================================= */
+
+main {
+    margin-left: 240px;
+    padding: 0 20px 30px;
+}
+
+header {
+    height: 70px;
+    background: #1b345d;
+    color: white;
+    margin: 0 -20px 16px;
+    padding: 10px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header h1 {
+    font-size: 22px;
+    margin: 0;
+}
+
+header p {
+    margin: 2px 0;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   5. SERVER CONNECTION STATUS
+   ========================================================= */
+
+.status {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+}
+
+.status i {
+    width: 9px;
+    height: 9px;
+    background: #23c58b;
+    border-radius: 50%;
+}
+
+.status span {
+    border-left: 1px solid #60718d;
+    margin-left: 18px;
+    padding-left: 20px;
+    font-size: 12px;
+}
+
+.status.connected i {
+    background: #18ad78 !important;
+    box-shadow: 0 0 0 4px rgba(24, 173, 120, 0.13);
+}
+
+.status.disconnected i {
+    background: #ef4d54 !important;
+    box-shadow: 0 0 0 4px rgba(239, 77, 84, 0.13);
+}
+
+
+/* =========================================================
+   6. WELCOME SECTION
+   ========================================================= */
+
+.welcome {
+    padding: 18px;
+    display: grid;
+    grid-template-columns: 60px 1fr 280px;
+    gap: 16px;
+    align-items: center;
+    background: linear-gradient(110deg, #e8f2ff, #ffffff);
+    border: 1px solid #d9e5f5;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #203b6310;
+}
+
+.target {
+    font-size: 42px;
+    color: #1767d7;
+}
+
+.welcome h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+}
+
+.welcome h3 {
+    margin: 0 0 5px;
+}
+
+.welcome p {
+    margin: 0;
+    line-height: 1.5;
+    color: #405a80;
+}
+
+.goal {
+    background: #e4efff;
+    border: 1px solid #c4d9ff;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.goal p {
+    font-size: 13px;
+    color: #1253a6;
+    margin-top: 7px;
+}
+
+
+/* =========================================================
+   7. SUMMARY STATISTICS CARDS
+   ========================================================= */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 16px 0;
+}
+
+.stats article {
+    padding: 15px 18px;
+    background: #ffffff;
+    border: 1px solid #d9e5f5;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #203b6310;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stats article:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px #203b6318;
+}
+
+.stats label,
+.stats small {
+    display: block;
+    color: #61728d;
+}
+
+.stats strong {
+    font-size: 28px;
+    display: block;
+    margin: 5px 0;
+    color: #102d5b;
+}
+
+
+/* =========================================================
+   8. DATA VISUALISATION AND CHARTS
+   ========================================================= */
+
+.charts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.charts article {
+    padding: 12px;
+    height: 240px;
+    background: #ffffff;
+    border: 1px solid #d9e5f5;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #203b6310;
+}
+
+.charts h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.charts canvas {
+    max-height: 185px;
+}
+
+
+/* =========================================================
+   9. LOWER CONTENT LAYOUT
+   ========================================================= */
+
+.lower {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 14px;
+}
+
+
+/* =========================================================
+   10. GENERAL PANELS
+   ========================================================= */
+
+.panel {
+    padding: 16px;
+    margin-bottom: 15px;
+    background: #ffffff;
+    border: 1px solid #d9e5f5;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #203b6310;
+}
+
+.panel h2 {
+    font-size: 17px;
+    margin: 0 0 14px;
+}
+
+
+/* =========================================================
+   11. LOAN APPLICATION FORM
+   ========================================================= */
+
+.fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px 16px;
+}
+
+.fields label {
+    font-size: 12px;
+    color: #425779;
+    display: grid;
+    gap: 5px;
+}
+
+.fields input,
+.fields select {
+    width: 100%;
+    padding: 9px;
+    border: 1px solid #d3deed;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #14264b;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fields input:focus,
+.fields select:focus {
+    border-color: #2475f5;
+    box-shadow: 0 0 0 3px rgba(36, 117, 245, 0.10);
+}
+
+
+/* =========================================================
+   12. BUTTONS
+   ========================================================= */
+
+button {
+    display: block;
+    margin: 16px 0 0 auto;
+    padding: 11px 25px;
+    border: 0;
+    border-radius: 7px;
+    background: #216cf0;
+    color: white;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+button:hover {
+    background: #1256cb;
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   13. LOAN PREDICTION RESULT
+   ========================================================= */
+
+.result {
+    background: linear-gradient(#effaf7, #ffffff);
+    border-color: #b9e8d8;
+}
+
+.result h2 {
+    color: #087c67;
+}
+
+.resulticon {
+    margin: 30px auto 12px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #16ad79;
+    color: white;
+    font-size: 34px;
+    text-align: center;
+    line-height: 54px;
+}
+
+.result #result {
+    text-align: center;
+    padding: 20px 8px;
+}
+
+.result #result h2 {
+    font-size: 23px;
+    margin: 5px;
+}
+
+
+/* =========================================================
+   14. DATASET TABLE
+   ========================================================= */
+
+.tablepanel {
+    margin-top: 15px;
+}
+
+.tablepanel small {
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.scroll {
+    overflow: auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+}
+
+th,
+td {
+    padding: 10px;
+    border: 1px solid #e0e9f5;
+    text-align: left;
+}
+
+th {
+    background: #f0f5fc;
+    color: #203c67;
+    font-weight: 600;
+}
+
+tbody tr:hover {
+    background: #f7faff;
+}
+
+
+/* =========================================================
+   15. MODEL PERFORMANCE METRICS
+   ========================================================= */
+
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.metric {
+    border: 1px solid #dbe6f4;
+    border-radius: 7px;
+    padding: 12px;
+    background: #ffffff;
+}
+
+.metric span {
+    display: block;
+    color: #61728d;
+    font-size: 12px;
+}
+
+.metric b {
+    font-size: 20px;
+    color: #0b4db1;
+}
+
+.matrix {
+    border-collapse: collapse;
+    max-width: 520px;
+}
+
+.note {
+    color: #66758d;
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 14px;
+}
+
+
+/* =========================================================
+   16. FOOTER
+   ========================================================= */
+
+footer {
+    text-align: center;
+    color: #71809a;
+    padding: 12px;
+    border-top: 1px solid #e0e8f3;
+    margin-top: 10px;
+}
+
+
+/* =========================================================
+   17. TABLET RESPONSIVE DESIGN
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+    .sidebar {
+        width: 190px;
+    }
+
+    main {
+        margin-left: 190px;
+    }
+
+    .welcome {
+        grid-template-columns: 50px 1fr;
+    }
+
+    .goal {
+        grid-column: 2;
+    }
+
+    .charts {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .lower {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   18. MOBILE RESPONSIVE DESIGN
+   ========================================================= */
+
+@media (max-width: 680px) {
+
+    .sidebar {
+        position: static;
+        width: auto;
+        height: auto;
+    }
+
+    .brand {
+        height: auto;
+    }
+
+    nav {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .sidefoot {
+        display: none;
+    }
+
+    main {
+        margin: 0;
+        padding: 0 10px 20px;
+    }
+
+    header {
+        margin: 0 -10px 12px;
+        padding: 10px 14px;
+    }
+
+    header h1 {
+        font-size: 17px;
+    }
+
+    .status {
+        font-size: 11px;
+    }
+
+    .status span {
+        display: none;
+    }
+
+    .welcome {
+        grid-template-columns: 1fr;
+    }
+
+    .goal {
+        grid-column: auto;
+    }
+
+    .stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .charts {
+        grid-template-columns: 1fr;
+    }
+
+    .fields {
+        grid-template-columns: 1fr;
+    }
+
+    .metrics {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+
+/* =========================================================
+   19. SMALL SCREEN OPTIMISATION
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .stats,
+    .metrics,
+    nav {
+        grid-template-columns: 1fr;
+    }
+
+    header h1 {
+        font-size: 15px;
+    }
+
+    .brand b {
+        font-size: 23px;
+    }
+
+/* Dashboard chart sizing */
+.panel canvas {
+    width: 100% !important;
+    height: 260px !important;
+}
+
+/* Performance metrics */
+.metric strong {
+    display: block;
+    color: var(--navy);
+    font-size: 21px;
+    margin-top: 8px;
+}
+
+/* Prediction result visibility */
+.result.show {
+    display: block;
+}
+
+.result.approved {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+}
+
+.result.rejected {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+/* Confusion matrix */
+.matrix table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+}
+
+
+}
