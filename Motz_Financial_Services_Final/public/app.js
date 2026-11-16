@@ -354,7 +354,25 @@ if (loanForm) {
                 throw new Error(result.error || 'Prediction could not be completed.');
             }
 
-            const prediction = String(result.prediction || '').trim().toLowerCase();
+            // Use the two class scores as the source of truth for the
+            // displayed decision. This prevents a rejection score from being
+            // shown beside an approval headline (or vice versa).
+            const parseScore = value => {
+                if (value === undefined || value === null) return null;
+                const parsed = Number(String(value).replace('%', '').trim());
+                return Number.isFinite(parsed) ? parsed : null;
+            };
+
+            const approvedScore = parseScore(result.approved_score_percent);
+            const rejectedScore = parseScore(result.rejected_score_percent);
+            let prediction = String(result.prediction || '').trim().toLowerCase();
+
+            if (approvedScore !== null && rejectedScore !== null) {
+                if (Math.abs(approvedScore + rejectedScore - 100) > 1.1) {
+                    throw new Error('The prediction service returned inconsistent class scores. Please retry.');
+                }
+                prediction = approvedScore >= rejectedScore ? 'approved' : 'rejected';
+            }
 
             if (!['approved', 'rejected'].includes(prediction)) {
                 throw new Error('The prediction service returned an unknown loan status.');
@@ -365,6 +383,12 @@ if (loanForm) {
             const confidenceLabel = result.confidence
                 ? String(result.confidence)
                 : 'Not supplied';
+            const scoreDetails = approvedScore !== null && rejectedScore !== null
+                ? `
+                    <p><strong>Approval model score: ${approvedScore.toFixed(1)}%</strong></p>
+                    <p><strong>Rejection model score: ${rejectedScore.toFixed(1)}%</strong></p>
+                `
+                : '';
 
             resultBox.className = approved
                 ? 'result show approved'
@@ -375,8 +399,10 @@ if (loanForm) {
                 <h2>${decisionLabel}</h2>
                 <p class="decision-status"><strong>Predicted decision: ${decisionLabel}</strong></p>
                 <p>${escapeHTML(result.notice || 'This is a machine-learning assessment.')}</p>
-                <p><strong>Relative model score: ${escapeHTML(confidenceLabel)}</strong></p>
-                <p><small>${escapeHTML(result.confidence_note || 'This score is not a calibrated probability.')}</small></p>
+                ${scoreDetails}
+                <p><strong>Highest class score: ${escapeHTML(confidenceLabel)}</strong></p>
+                <p><small>${escapeHTML(result.decision_basis || 'The displayed decision follows the higher class score.')}</small></p>
+                <p><small>${escapeHTML(result.confidence_note || 'These are relative model scores, not calibrated probabilities.')}</small></p>
                 <p><small>
                     This is a model prediction for academic decision support,
                     not a final lending decision. Human review is required.
