@@ -244,9 +244,13 @@ def main():
                 )
                 # Out-of-fold probabilities support a diagnostic threshold sweep.
                 # This sweep is exploratory, not an independent test.
-                approval_scores = cross_val_predict(
-                    pipeline, X, y, cv=cv, method="predict_proba", n_jobs=1
-                )[:, 1]
+                approval_scores = (
+                    cross_val_predict(
+                        pipeline, X, y, cv=cv, method="predict_proba", n_jobs=1
+                    )[:, 1]
+                    if model_name in {"prolog_naive_bayes_replica", "logistic_regression"}
+                    else None
+                )
 
             results.append({
                 "feature_set": feature_set,
