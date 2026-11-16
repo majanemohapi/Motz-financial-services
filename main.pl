@@ -14,6 +14,7 @@
 :- use_module(library(apply)).
 :- use_module(library(pairs)).
 :- use_module(library(error)).
+:- use_module(library(random)).
 
 :- dynamic loan/13.
 :- dynamic trained/1.
@@ -418,28 +419,25 @@ train_and_evaluate :-
     format('Holdout records: ~w~n', [TestCount]),
     format('Holdout accuracy: ~2f%~n', [Metrics.accuracy]).
 
-% Every fifth record is used for holdout testing.
+% Reproducible stratified 80/20 holdout: each class is shuffled
+% independently so both approved and rejected records are represented.
 split_dataset(Rows, Training, Test) :-
-    split_dataset(Rows, 1, Training, Test).
+    set_random(seed(20261116)),
+    include(has_class(approved), Rows, ApprovedRows),
+    include(has_class(rejected), Rows, RejectedRows),
+    random_permutation(ApprovedRows, ShuffledApproved),
+    random_permutation(RejectedRows, ShuffledRejected),
+    split_class_rows(ShuffledApproved, ApprovedTraining, ApprovedTest),
+    split_class_rows(ShuffledRejected, RejectedTraining, RejectedTest),
+    append(ApprovedTraining, RejectedTraining, Training),
+    append(ApprovedTest, RejectedTest, Test).
 
-split_dataset([], _, [], []).
-
-split_dataset([Row|Rows], Index, Training, Test) :-
-
-    (0 is Index mod 5
-    -> Test = [Row|RestTest],
-       Training = RestTraining
-    ; Training = [Row|RestTraining],
-      Test = RestTest),
-
-    NextIndex is Index + 1,
-
-    split_dataset(
-        Rows,
-        NextIndex,
-        RestTraining,
-        RestTest
-    ).
+split_class_rows(Rows, Training, Test) :-
+    length(Rows, Count),
+    TestCount is max(1, (Count + 4) // 5),
+    TrainingCount is Count - TestCount,
+    length(Training, TrainingCount),
+    append(Training, Test, Rows).
 
 % ============================================================
 % NAIVE BAYES CLASSIFIER
@@ -575,6 +573,7 @@ evaluate_rows(TestRows, Metrics) :-
     safe_percentage(TP, TP + FP, Precision),
     safe_percentage(TP, TP + FN, Recall),
     safe_percentage(TN, TN + FP, Specificity),
+    BalancedAccuracy is (Recall + Specificity) / 2,
 
     (Precision + Recall =:= 0
     -> F1 = 0
@@ -586,6 +585,7 @@ evaluate_rows(TestRows, Metrics) :-
         precision: Precision,
         recall: Recall,
         specificity: Specificity,
+        balanced_accuracy: BalancedAccuracy,
         f1: F1,
         tp: TP,
         tn: TN,
@@ -764,6 +764,7 @@ api_predict_request(Request) :-
         prediction: Prediction,
         confidence: ConfidenceText,
         confidence_note: 'Relative Naive Bayes score; not a calibrated probability.',
+        review_required: true,
         notice: 'This prediction is decision support and must be reviewed by a human.'
     }).
 
@@ -887,7 +888,7 @@ api_performance(_Request) :-
             fp: Metrics.fp,
             fn: Metrics.fn
         },
-        method: 'Ordered 80/20 holdout; natural class priors; feature-specific Laplace smoothing.'
+        method: 'Reproducible stratified 80/20 holdout; natural class priors; feature-specific Laplace smoothing.'
     })
     ; reply_json_dict(_{
         error: 'Model evaluation is not available.'
