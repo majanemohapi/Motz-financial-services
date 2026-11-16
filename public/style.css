@@ -680,3 +680,36 @@ footer {
 
 
 }
+
+
+/* Additional loan assessment and affordability results */
+.score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+    text-align: left;
+}
+.score-grid > div {
+    background: #f4f7fc;
+    border: 1px solid #dbe6f4;
+    border-radius: 8px;
+    padding: 12px;
+}
+.score-grid span {
+    display: block;
+    color: #61728d;
+    font-size: 11px;
+    margin-bottom: 6px;
+}
+.score-grid strong {
+    display: block;
+    color: #123b72;
+    font-size: 18px;
+    overflow-wrap: anywhere;
+}
+.result hr {
+    border: 0;
+    border-top: 1px solid #dbe6f4;
+    margin: 18px 0;
+}
