@@ -93,6 +93,8 @@ async function loadDashboard() {
     setText('#total', summary.total);
     setText('#approved', summary.approved);
     setText('#rejected', summary.rejected);
+    setText('#approvalRate', pct(summary.approval_rate));
+    setText('#rejectionRate', pct(summary.rejection_rate));
     setText('#accuracy', pct(summary.accuracy));
 
     const [analysis, quality, performanceResponse, records] =
