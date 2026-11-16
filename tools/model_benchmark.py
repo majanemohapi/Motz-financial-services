@@ -48,6 +48,11 @@ def evaluate(y_true, y_pred):
     }
 
 
+def threshold_metrics(y_true, approval_scores, threshold):
+    predicted = np.where(approval_scores >= threshold, "Y", "N")
+    return evaluate(y_true, predicted)
+
+
 def build_pipeline(model, numeric, categorical):
     preprocess = ColumnTransformer([
         ("numeric", Pipeline([
@@ -218,6 +223,7 @@ def main():
 
     cv = StratifiedKFold(n_splits=FOLDS, shuffle=True, random_state=RANDOM_STATE)
     results = []
+    threshold_results = []
     for feature_set, columns in feature_sets.items():
         numeric = [c for c in columns if pd.api.types.is_numeric_dtype(df[c])]
         categorical = [c for c in columns if c not in numeric]
@@ -236,11 +242,26 @@ def main():
                 predictions = cross_val_predict(
                     pipeline, X, y, cv=cv, method="predict", n_jobs=1
                 )
+                # Out-of-fold probabilities support a diagnostic threshold sweep.
+                # This sweep is exploratory, not an independent test.
+                approval_scores = cross_val_predict(
+                    pipeline, X, y, cv=cv, method="predict_proba", n_jobs=1
+                )[:, 1]
+
             results.append({
                 "feature_set": feature_set,
                 "model": model_name,
                 **evaluate(y, predictions),
             })
+
+            if model_name in {"prolog_naive_bayes_replica", "logistic_regression"}:
+                for threshold in np.arange(0.30, 0.701, 0.025):
+                    threshold_results.append({
+                        "feature_set": feature_set,
+                        "model": model_name,
+                        "approval_threshold": round(float(threshold), 3),
+                        **threshold_metrics(y, approval_scores, threshold),
+                    })
 
     results.sort(
         key=lambda row: (
@@ -261,6 +282,15 @@ def main():
             "probabilities or evidence of real-world lending suitability."
         ),
         "results": results,
+        "threshold_analysis": {
+            "description": (
+                "Exploratory out-of-fold threshold sweep for Prolog-style Naive Bayes "
+                "and logistic regression. The same cross-validation predictions are "
+                "used to inspect thresholds, so this is diagnostic only; do not deploy "
+                "a selected threshold without a separate untouched test."
+            ),
+            "results": threshold_results,
+        },
     }
     output = ROOT / "benchmark-results.json"
     output.write_text(json.dumps(report, indent=2), encoding="utf-8")
