@@ -691,19 +691,19 @@ api_predict_request(Request) :-
 
     http_read_json_dict(Request, Input),
 
-    get_input(Input, gender, male, Gender0),
-    get_input(Input, married, yes, Married0),
-    get_input(Input, dependents, '0', Dependents0),
-    get_input(Input, education, graduate, Education0),
-    get_input(Input, selfEmployed, no, SelfEmployed0),
+    require_input(Input, gender, Gender0),
+    require_input(Input, married, Married0),
+    require_input(Input, dependents, Dependents0),
+    require_input(Input, education, Education0),
+    require_input(Input, selfEmployed, SelfEmployed0),
 
-    get_input(Input, applicantIncome, 5000, ApplicantIncome0),
-    get_input(Input, coapplicantIncome, 0, CoapplicantIncome0),
-    get_input(Input, loanAmount, 120, LoanAmount0),
-    get_input(Input, loanTerm, 360, LoanTerm0),
-    get_input(Input, creditHistory, 1, CreditHistory0),
+    require_input(Input, applicantIncome, ApplicantIncome0),
+    require_input(Input, coapplicantIncome, CoapplicantIncome0),
+    require_input(Input, loanAmount, LoanAmount0),
+    require_input(Input, loanTerm, LoanTerm0),
+    require_input(Input, creditHistory, CreditHistory0),
 
-    get_input(Input, propertyArea, urban, PropertyArea0),
+    require_input(Input, propertyArea, PropertyArea0),
 
     clean_category(Gender0, Gender),
     clean_category(Married0, Married),
@@ -776,10 +776,15 @@ api_predict_error(Error) :-
         [status(400)]
     ).
 
-get_input(Dict, Key, Default, Value) :-
-    (get_dict(Key, Dict, Found)
+require_input(Dict, Key, Value) :-
+    ( get_dict(Key, Dict, Found),
+      Found \== null,
+      Found \== ""
     -> Value = Found
-    ; Value = Default).
+    ; throw(error(
+        existence_error(input_field, Key),
+        context(api_predict/1, 'A required applicant field is missing.')
+    )).
 
 validate_prediction_input(A, C, L, T, H) :-
 
