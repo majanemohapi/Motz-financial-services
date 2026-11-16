@@ -547,13 +547,16 @@ predict_features(Features, Prediction, Confidence) :-
     class_score(Rows, approved, Features, ApprovedScore),
     class_score(Rows, rejected, Features, RejectedScore),
 
-    (ApprovedScore >= RejectedScore
-    -> Prediction = approved,
-       Difference is ApprovedScore - RejectedScore
-    ; Prediction = rejected,
-      Difference is RejectedScore - ApprovedScore),
+    % Approval likelihood is compared with the requested 50% decision threshold.
+    % At 50% or above the model predicts approved; below 50% it predicts rejected.
+    ApprovalDifference is ApprovedScore - RejectedScore,
+    ApprovalLikelihood is 1 / (1 + exp(-ApprovalDifference)),
 
-    Confidence is 1 / (1 + exp(-Difference)).
+    (ApprovalLikelihood >= 0.5
+    -> Prediction = approved,
+       Confidence = ApprovalLikelihood
+    ; Prediction = rejected,
+      Confidence is 1 - ApprovalLikelihood).
 
 % ============================================================
 % MODEL EVALUATION
