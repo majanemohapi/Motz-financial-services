@@ -23,6 +23,76 @@ jobs:
         with:
           python-version: "3.12"
 
+
+      - name: Install SWI-Prolog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y swi-prolog-nox curl
+
+      - name: Smoke test live Prolog API
+        run: |
+          PORT=8080 swipl -q -s main.pl > /tmp/motz-prolog.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8080/api/health > /tmp/health.json; then
+              break
+            fi
+            sleep 2
+          done
+
+          python - <<'PY'
+          import json
+          import urllib.request
+
+          with open("/tmp/health.json", encoding="utf-8") as handle:
+              health = json.load(handle)
+          assert health.get("status") == "ok", health
+          assert health.get("records") == 614, health
+
+          with urllib.request.urlopen("http://127.0.0.1:8080/api/performance") as response:
+              performance = json.load(response)
+          metrics = performance["metrics"]
+          confusion = performance["confusion"]
+          assert metrics["holdout_records"] == 124, metrics
+          assert sum(confusion[k] for k in ("tp", "tn", "fp", "fn")) == 124, confusion
+          assert all(k in metrics for k in (
+              "accuracy", "balanced_accuracy", "precision", "recall",
+              "specificity", "f1", "fp", "fn"
+          )), metrics
+
+          payload = {
+              "gender": "male",
+              "married": "yes",
+              "dependents": "0",
+              "education": "graduate",
+              "selfEmployed": "no",
+              "applicantIncome": 5000,
+              "coapplicantIncome": 0,
+              "loanAmount": 120,
+              "loanTerm": 360,
+              "creditHistory": 1,
+              "propertyArea": "urban",
+              "monthlyExpenses": 0,
+              "monthlyDebt": 0,
+              "annualRate": 0
+          }
+          request = urllib.request.Request(
+              "http://127.0.0.1:8080/api/predict",
+              data=json.dumps(payload).encode("utf-8"),
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(request) as response:
+              prediction = json.load(response)
+          assert prediction.get("success") is True, prediction
+          assert prediction.get("prediction") in ("approved", "rejected"), prediction
+          print("Prolog API smoke test passed.")
+          print("Holdout metrics:", metrics)
+          print("Prediction endpoint: OK")
+          PY
+
       - name: Install benchmark dependencies
         run: python -m pip install --upgrade pip pandas numpy scikit-learn
 
