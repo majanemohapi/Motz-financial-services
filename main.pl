@@ -756,6 +756,11 @@ api_predict_request(Request) :-
     ))),
 
     ConfidencePercent is Confidence * 100,
+    (Prediction == approved
+    -> ApprovalScore = ConfidencePercent,
+       RejectionScore is 100 - ConfidencePercent
+    ; RejectionScore = ConfidencePercent,
+      ApprovalScore is 100 - ConfidencePercent),
 
     format(string(ConfidenceText), '~1f%', [ConfidencePercent]),
 
@@ -763,9 +768,11 @@ api_predict_request(Request) :-
         success: true,
         prediction: Prediction,
         confidence: ConfidenceText,
-        confidence_note: 'Relative Naive Bayes score; not a calibrated probability.',
+        approval_model_score: ApprovalScore,
+        rejection_model_score: RejectionScore,
+        confidence_note: 'These are relative Naive Bayes model scores, not calibrated real-world probabilities or guarantees.',
         review_required: true,
-        notice: 'This prediction is decision support and must be reviewed by a human.'
+        notice: 'This prediction is educational decision support. A qualified human must review all information before any lending decision.'
     }).
 
 api_predict_error(Error) :-
