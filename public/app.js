@@ -359,8 +359,8 @@ if (loanForm) {
             }
 
             const approved = result.prediction === 'approved';
-            const approvalScore = Number(result.approval_model_score ?? 0);
-            const rejectionScore = Number(result.rejection_model_score ?? 0);
+            const approvalScore = Number(result.approval_likelihood ?? 0);
+            const rejectionScore = Number(result.rejection_likelihood ?? 0);
 
             // Kaggle LoanAmount is recorded in thousands; convert to the same
             // base units as the applicant's monthly income for this estimate.
@@ -392,10 +392,10 @@ if (loanForm) {
                 <h2>${approved ? 'Historical Approval Pattern' : 'Historical Rejection Pattern'}</h2>
                 <p>${escapeHTML(result.notice)}</p>
                 <div class="score-grid">
-                    <div><span>Approval model score</span><strong>${approvalScore.toFixed(1)}%</strong></div>
-                    <div><span>Rejection model score</span><strong>${rejectionScore.toFixed(1)}%</strong></div>
+                    <div><span>Estimated approval likelihood</span><strong>${approvalScore.toFixed(1)}%</strong></div>
+                    <div><span>Estimated rejection likelihood</span><strong>${rejectionScore.toFixed(1)}%</strong></div>
                 </div>
-                <p><small>${escapeHTML(result.confidence_note || 'Relative model scores only; not calibrated probabilities.')}</small></p>
+                <p><small>${escapeHTML(result.confidence_note || 'Model-estimated likelihoods; not independently calibrated or guaranteed.')}</small></p>
                 <hr>
                 <h3>Repayment estimate</h3>
                 <div class="score-grid">
