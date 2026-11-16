@@ -250,6 +250,7 @@ async function loadDashboard() {
             ['Precision', performance.precision],
             ['Recall', performance.recall],
             ['Specificity', performance.specificity],
+            ['Balanced Accuracy', performance.balanced_accuracy],
             ['F1 Score', performance.f1]
         ].map(([label, value]) => `
             <div class="metric">
@@ -364,10 +365,11 @@ if (loanForm) {
                 <div class="resulticon">${approved ? '✓' : '×'}</div>
                 <h2>${approved ? 'Approved Pattern' : 'Rejected Pattern'}</h2>
                 <p>${escapeHTML(result.notice)}</p>
-                <p><strong>${escapeHTML(result.confidence)}</strong></p>
+                <p><strong>Relative model score: ${escapeHTML(result.confidence)}</strong></p>
+                <p><small>${escapeHTML(result.confidence_note || 'This score is not a calibrated probability.')}</small></p>
                 <p><small>
-                    This is a model prediction, not a final lending decision.
-                    Human review is required.
+                    Human review is required before any lending decision.
+                    The model may be wrong, and this result is not a guarantee.
                 </small></p>
             `;
         } catch (error) {
