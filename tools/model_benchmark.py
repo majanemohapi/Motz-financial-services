@@ -224,6 +224,8 @@ def main():
         X, y = df[columns], df[TARGET]
 
         for model_name, model in models.items():
+            if model_name == "prolog_naive_bayes_replica" and feature_set != "all_recorded_features":
+                continue
             pipeline = (
                 PrologStyleNaiveBayes()
                 if model_name == "prolog_naive_bayes_replica"
