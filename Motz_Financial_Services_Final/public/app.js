@@ -354,20 +354,32 @@ if (loanForm) {
                 throw new Error(result.error || 'Prediction could not be completed.');
             }
 
-            const approved = result.prediction === 'approved';
+            const prediction = String(result.prediction || '').trim().toLowerCase();
+
+            if (!['approved', 'rejected'].includes(prediction)) {
+                throw new Error('The prediction service returned an unknown loan status.');
+            }
+
+            const approved = prediction === 'approved';
+            const decisionLabel = approved ? 'LOAN APPROVED' : 'LOAN REJECTED';
+            const confidenceLabel = result.confidence
+                ? String(result.confidence)
+                : 'Not supplied';
 
             resultBox.className = approved
                 ? 'result show approved'
                 : 'result show rejected';
 
             resultBox.innerHTML = `
-                <div class="resulticon">${approved ? '✓' : '×'}</div>
-                <h2>${approved ? 'Approved Pattern' : 'Rejected Pattern'}</h2>
-                <p>${escapeHTML(result.notice)}</p>
-                <p><strong>${escapeHTML(result.confidence)}</strong></p>
+                <div class="resulticon" aria-hidden="true">${approved ? '✓' : '×'}</div>
+                <h2>${decisionLabel}</h2>
+                <p class="decision-status"><strong>Predicted decision: ${decisionLabel}</strong></p>
+                <p>${escapeHTML(result.notice || 'This is a machine-learning assessment.')}</p>
+                <p><strong>Relative model score: ${escapeHTML(confidenceLabel)}</strong></p>
+                <p><small>${escapeHTML(result.confidence_note || 'This score is not a calibrated probability.')}</small></p>
                 <p><small>
-                    This is a model prediction, not a final lending decision.
-                    Human review is required.
+                    This is a model prediction for academic decision support,
+                    not a final lending decision. Human review is required.
                 </small></p>
             `;
         } catch (error) {
