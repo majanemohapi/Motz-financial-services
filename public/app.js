@@ -268,6 +268,9 @@ async function loadDashboard() {
     const confusion = performanceResponse.confusion || performance;
 
     if (matrix) {
+        const incorrectApprovals = Number(confusion.fp ?? 0);
+        const incorrectRejections = Number(confusion.fn ?? 0);
+
         matrix.innerHTML = `
             <table>
                 <thead>
@@ -280,16 +283,29 @@ async function loadDashboard() {
                 <tbody>
                     <tr>
                         <th>Actual Approved</th>
-                        <td>${confusion.tp}</td>
-                        <td>${confusion.fn}</td>
+                        <td>${confusion.tp ?? 0}</td>
+                        <td>${confusion.fn ?? 0}</td>
                     </tr>
                     <tr>
                         <th>Actual Rejected</th>
-                        <td>${confusion.fp}</td>
-                        <td>${confusion.tn}</td>
+                        <td>${confusion.fp ?? 0}</td>
+                        <td>${confusion.tn ?? 0}</td>
                     </tr>
                 </tbody>
             </table>
+
+            <div class="metrics error-summary" aria-label="Incorrect prediction counts">
+                <div class="metric">
+                    <span>Incorrect approvals</span>
+                    <strong>${incorrectApprovals}</strong>
+                    <small>Actually rejected, predicted approved (false positives)</small>
+                </div>
+                <div class="metric">
+                    <span>Incorrect rejections</span>
+                    <strong>${incorrectRejections}</strong>
+                    <small>Actually approved, predicted rejected (false negatives)</small>
+                </div>
+            </div>
         `;
     }
 
