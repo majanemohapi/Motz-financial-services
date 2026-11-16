@@ -359,29 +359,9 @@ if (loanForm) {
             }
 
             const approved = result.prediction === 'approved';
-            const approvalScore = Number(result.approval_likelihood ?? 0);
-            const rejectionScore = Number(result.rejection_likelihood ?? 0);
-
-            // Kaggle LoanAmount is recorded in thousands; convert to the same
-            // base units as the applicant's monthly income for this estimate.
-            const principal = Number(data.loanAmount) * 1000;
-            const months = Number(data.loanTerm);
-            const annualRate = Number(data.annualRate);
-            const monthlyIncome = Number(data.applicantIncome) + Number(data.coapplicantIncome);
-            const disposableIncome = monthlyIncome - Number(data.monthlyExpenses) - Number(data.monthlyDebt);
-            const monthlyRate = annualRate / 1200;
-            const payment = monthlyRate === 0
-                ? principal / months
-                : principal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -months));
-            const totalRepayment = payment * months;
-            const totalInterest = totalRepayment - principal;
-            const safePayment = Number.isFinite(payment) ? payment : 0;
-            const affordablePayment = Math.max(0, disposableIncome * 0.30);
-            const affordability = disposableIncome <= 0
-                ? 'Insufficient disposable income based on the figures entered'
-                : safePayment <= affordablePayment
-                    ? 'Within the illustrative 30% disposable-income guideline'
-                    : 'Above the illustrative 30% disposable-income guideline';
+            const likelihood = approved
+                ? Number(result.approval_likelihood ?? 0)
+                : Number(result.rejection_likelihood ?? 0);
 
             resultBox.className = approved
                 ? 'result show approved'
@@ -389,25 +369,9 @@ if (loanForm) {
 
             resultBox.innerHTML = `
                 <div class="resulticon">${approved ? '✓' : '×'}</div>
-                <h2>${approved ? 'Historical Approval Pattern' : 'Historical Rejection Pattern'}</h2>
-                <p>${escapeHTML(result.notice)}</p>
-                <div class="score-grid">
-                    <div><span>Estimated approval likelihood</span><strong>${approvalScore.toFixed(1)}%</strong></div>
-                    <div><span>Estimated rejection likelihood</span><strong>${rejectionScore.toFixed(1)}%</strong></div>
-                </div>
-                <p><small>${escapeHTML(result.confidence_note || 'Model-estimated likelihoods; not independently calibrated or guaranteed.')}</small></p>
-                <hr>
-                <h3>Repayment estimate</h3>
-                <div class="score-grid">
-                    <div><span>Estimated monthly instalment</span><strong>${safePayment.toFixed(2)}</strong></div>
-                    <div><span>Total repayment</span><strong>${totalRepayment.toFixed(2)}</strong></div>
-                    <div><span>Estimated total interest</span><strong>${totalInterest.toFixed(2)}</strong></div>
-                    <div><span>Disposable income / month</span><strong>${disposableIncome.toFixed(2)}</strong></div>
-                </div>
-                <p><strong>Affordability:</strong> ${escapeHTML(affordability)}</p>
-                <p><strong>Illustrative affordable instalment limit:</strong> ${affordablePayment.toFixed(2)} per month</p>
-                <p class="note">Calculations use the entered ${annualRate.toFixed(1)}% annual rate, a 30% disposable-income guideline and the dataset's loan-amount-in-thousands convention. These are estimates, not lender terms.</p>
-                <p><small>Model scores are not actual approval probabilities. The model may be wrong; human review is required.</small></p>
+                <h2>${approved ? 'Estimated chance of getting the loan' : 'Estimated chance of being rejected'}</h2>
+                <strong class="single-likelihood">${likelihood.toFixed(1)}%</strong>
+                <p><small>This is a model estimate based on historical data, not a guarantee or a calibrated real-world probability.</small></p>
             `;
         } catch (error) {
             resultBox.className = 'result show rejected';
