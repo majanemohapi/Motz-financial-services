@@ -625,6 +625,10 @@ evaluate_rows(TestRows, Metrics) :-
     -> F1 = 0
     ; F1 is 2 * Precision * Recall / (Precision + Recall)),
 
+    % Probability-quality metrics are calculated on the same unseen
+    % holdout rows. Brier score and log loss penalize overconfident errors.
+    probability_metrics(TestRows, BrierScore, LogLoss),
+
     Metrics = _{
         total: Total,
         accuracy: Accuracy,
@@ -633,11 +637,36 @@ evaluate_rows(TestRows, Metrics) :-
         specificity: Specificity,
         balanced_accuracy: BalancedAccuracy,
         f1: F1,
+        brier_score: BrierScore,
+        log_loss: LogLoss,
         tp: TP,
         tn: TN,
         fp: FP,
         fn: FN
     }.
+
+probability_metrics(Rows, BrierScore, LogLoss) :-
+    probability_metrics(Rows, 0.0, 0.0, Count, BrierTotal, LogLossTotal),
+    ( Count > 0
+    -> BrierScore is BrierTotal / Count,
+       LogLoss is LogLossTotal / Count
+    ; BrierScore = 0.0,
+      LogLoss = 0.0
+    ).
+
+probability_metrics([], BrierAcc, LogAcc, 0, BrierAcc, LogAcc).
+probability_metrics([Features-Actual|Rows], BrierAcc, LogAcc, Count, BrierTotal, LogLossTotal) :-
+    predict_features(Features, Predicted, Confidence),
+    ( Predicted == Actual
+    -> ActualProbability = Confidence
+    ; ActualProbability is 1.0 - Confidence
+    ),
+    Error is ActualProbability - 1.0,
+    BrierNext is BrierAcc + Error * Error,
+    ClampedProbability is max(1.0e-15, min(1.0 - 1.0e-15, ActualProbability)),
+    LogNext is LogAcc - log(ClampedProbability),
+    probability_metrics(Rows, BrierNext, LogNext, Remaining, BrierTotal, LogLossTotal),
+    Count is Remaining + 1.
 
 evaluate_rows([], TP, TN, FP, FN, TP, TN, FP, FN).
 
@@ -950,7 +979,7 @@ api_performance(_Request) :-
             fp: Metrics.fp,
             fn: Metrics.fn
         },
-        method: 'Reproducible stratified 80/20 holdout evaluation; final production model refitted on all labelled CSV rows; natural class priors; Laplace smoothing; includes a derived repayment-burden feature.'
+        method: 'Reproducible stratified 80/20 holdout evaluation; final production model refitted on all labelled CSV rows; natural class priors; Laplace smoothing; derived repayment-burden feature; holdout Brier score and log loss assess probability quality.'
     })
     ; reply_json_dict(_{
         error: 'Model evaluation is not available.'
