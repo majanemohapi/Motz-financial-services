@@ -673,6 +673,9 @@ api_summary(_Request) :-
 
     Total is Approved + Rejected,
 
+    safe_percentage(Approved, Total, ApprovalRate),
+    safe_percentage(Rejected, Total, RejectionRate),
+
     (model_stats(Metrics)
     -> Accuracy = Metrics.accuracy
     ; Accuracy = 0),
@@ -681,7 +684,10 @@ api_summary(_Request) :-
         total: Total,
         approved: Approved,
         rejected: Rejected,
-        accuracy: Accuracy
+        approval_rate: ApprovalRate,
+        rejection_rate: RejectionRate,
+        accuracy: Accuracy,
+        rate_source: 'Loaded data/train.csv Loan_Status labels'
     }).
 
 count_status(Status, Count) :-
