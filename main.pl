@@ -446,7 +446,11 @@ train_and_evaluate :-
     assertz(trained(AllRows)),
 
     put_dict(
-        _{training_records: Total, holdout_records: TestCount},
+        _{
+            training_records: TrainingCount,
+            production_training_records: Total,
+            holdout_records: TestCount
+        },
         HoldoutMetrics,
         Metrics
     ),
