@@ -327,8 +327,6 @@ loan_features(
 % Derived feature: estimated monthly principal repayment divided by
 % combined monthly income. Kaggle LoanAmount is expressed in thousands.
 % This uses only fields already present in train.csv and the application form.
-repayment_burden_band(_, _, _, _, missing) :-
-    !.
 repayment_burden_band(ApplicantIncome, CoapplicantIncome, LoanAmount, LoanTerm, Band) :-
     ( number(ApplicantIncome),
       number(CoapplicantIncome),
