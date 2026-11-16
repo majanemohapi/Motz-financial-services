@@ -466,12 +466,12 @@ has_feature(Class, Position, Value, Features-Class) :-
 class_score(Rows, Class, Features, Score) :-
 
     class_count(Rows, Class, ClassCount),
-    length(Rows, Total),
 
-    Total > 0,
     ClassCount > 0,
 
-    Prior is log(ClassCount / Total),
+    % Balanced class weighting: give approved and rejected equal prior
+    % probability so the majority class does not dominate predictions.
+    Prior is log(0.5),
 
     feature_score(
         Rows,
@@ -871,7 +871,7 @@ api_performance(_Request) :-
             fp: Metrics.fp,
             fn: Metrics.fn
         },
-        method: 'Ordered 80/20 holdout; every fifth row held out.'
+        method: '80/20 holdout; balanced class priors (50/50) during training; holdout retains original class distribution.'
     })
     ; reply_json_dict(_{
         error: 'Model evaluation is not available.'
