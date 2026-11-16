@@ -418,28 +418,29 @@ train_and_evaluate :-
     format('Holdout records: ~w~n', [TestCount]),
     format('Holdout accuracy: ~2f%~n', [Metrics.accuracy]).
 
-% Every fifth record is used for holdout testing.
+% Deterministic stratified 80/20 holdout: split each outcome
+% class separately so both classes are represented in train and test.
 split_dataset(Rows, Training, Test) :-
-    split_dataset(Rows, 1, Training, Test).
+    include(has_class(approved), Rows, ApprovedRows),
+    include(has_class(rejected), Rows, RejectedRows),
+    split_class_rows(ApprovedRows, ApprovedTraining, ApprovedTest),
+    split_class_rows(RejectedRows, RejectedTraining, RejectedTest),
+    append(ApprovedTraining, RejectedTraining, Training),
+    append(ApprovedTest, RejectedTest, Test).
 
-split_dataset([], _, [], []).
+split_class_rows(Rows, Training, Test) :-
+    split_class_rows(Rows, 1, Training, Test).
 
-split_dataset([Row|Rows], Index, Training, Test) :-
-
-    (0 is Index mod 5
+split_class_rows([], _, [], []).
+split_class_rows([Row|Rows], Index, Training, Test) :-
+    ( 0 is Index mod 5
     -> Test = [Row|RestTest],
        Training = RestTraining
-    ; Training = [Row|RestTraining],
-      Test = RestTest),
-
+    ;  Training = [Row|RestTraining],
+       Test = RestTest
+    ),
     NextIndex is Index + 1,
-
-    split_dataset(
-        Rows,
-        NextIndex,
-        RestTraining,
-        RestTest
-    ).
+    split_class_rows(Rows, NextIndex, RestTraining, RestTest).
 
 % ============================================================
 % NAIVE BAYES CLASSIFIER
@@ -494,31 +495,26 @@ feature_score(
     ClassCount,
     Score
 ) :-
-
-    feature_count(
-        Rows,
-        Class,
-        Position,
-        Value,
-        Count
-    ),
-
-    Probability is (Count + 1) / (ClassCount + 4),
-
+    feature_count(Rows, Class, Position, Value, Count),
+    feature_cardinality(Rows, Position, Cardinality),
+    Denominator is ClassCount + Cardinality + 1,
+    Probability is (Count + 1) / Denominator,
     PartScore is log(Probability),
-
     NextPosition is Position + 1,
-
     feature_score(
-        Rows,
-        Class,
-        Values,
-        NextPosition,
-        ClassCount,
-        RemainingScore
+        Rows, Class, Values, NextPosition, ClassCount, RemainingScore
     ),
-
     Score is PartScore + RemainingScore.
+
+% Count the observed categories for this feature across the training
+% data. The extra one in the denominator reserves probability mass for
+% a category not seen during training.
+feature_cardinality(Rows, Position, Cardinality) :-
+    findall(Value,
+        (member(Features-_, Rows), nth1(Position, Features, Value)),
+        Values),
+    sort(Values, UniqueValues),
+    length(UniqueValues, Cardinality).
 
 predict_features(Features, Prediction, Confidence) :-
     predict_features(Features, Prediction, Confidence, _, _).
@@ -884,7 +880,7 @@ api_performance(_Request) :-
             fp: Metrics.fp,
             fn: Metrics.fn
         },
-        method: 'Ordered 80/20 holdout; every fifth row held out.'
+        method: 'Deterministic stratified 80/20 holdout; every fifth row within each outcome class held out.'
     })
     ; reply_json_dict(_{
         error: 'Model evaluation is not available.'
