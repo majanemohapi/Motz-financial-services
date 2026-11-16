@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- ==========================================
+         DOCUMENT CONFIGURATION
+    =========================================== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Motz Financial Services | Loan Prediction</title>
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+</head>
+
+<body>
+
+    <!-- ==========================================
+         SIDEBAR NAVIGATION
+    =========================================== -->
+
+    <aside class="sidebar">
+
+        <!-- Company Branding -->
+        <div class="brand">
+
+            <div class="logo">▥</div>
+
+            <div>
+                <b>MOTZ</b>
+                <small>FINANCIAL SERVICES</small>
+            </div>
+
+        </div>
+
+
+        <!-- Navigation Menu -->
+        <nav>
+
+            <a class="active" href="#dashboard">
+                ⌂　 Dashboard
+            </a>
+
+            <a href="#predict">
+                ▣　 Make Prediction
+            </a>
+
+            <a href="#dataset">
+                ▤　 Dataset Overview
+            </a>
+
+            <a href="#analysis">
+                ▥　 Data Analysis
+            </a>
+
+            <a href="#performance">
+                ◎　 Model Performance
+            </a>
+
+            <a href="#about">
+                ⓘ　 About
+            </a>
+
+        </nav>
+
+
+        <!-- Sidebar Footer -->
+        <div class="sidefoot">
+
+            Motz Financial Services
+
+            <br>
+
+            <small>
+                Loan Prediction System
+                <br>
+                Powered by SWI-Prolog
+            </small>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ==========================================
+         MAIN APPLICATION CONTENT
+    =========================================== -->
+
+    <main>
+
+
+        <!-- ======================================
+             TOP HEADER
+        ======================================= -->
+
+        <header>
+
+            <div>
+
+                <h1>Loan Prediction System</h1>
+
+                <p>Machine Learning with Prolog</p>
+
+            </div>
+
+
+            <!-- Server Connection Status -->
+            <div class="status">
+
+                <i></i>
+
+                Checking Prolog Server...
+
+                <span>
+                    Group 3
+                    <br>
+                    DIAL3110
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- ======================================
+             DASHBOARD WELCOME SECTION
+        ======================================= -->
+
+        <section id="dashboard" class="welcome">
+
+            <div class="target">
+                ◎
+            </div>
+
+
+            <!-- Introduction -->
+            <div>
+
+                <h2>
+                    Welcome to Motz Financial Services
+                </h2>
+
+                <h3>
+                    Loan Prediction System
+                </h3>
+
+
+
+            </div>
+
+
+            <!-- System Goal -->
+            <div class="goal">
+
+                <b>Our Goal</b>
+
+                <p>
+                    Support consistent, data-informed loan assessment.
+                    Predictions are decision support, not automatic
+                    lending decisions.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ======================================
+             DASHBOARD SUMMARY STATISTICS
+        ======================================= -->
+
+        <section class="stats">
+
+
+            <!-- Total Records -->
+            <article>
+
+                <label>Total Records</label>
+
+                <strong id="total">—</strong>
+
+                <small>
+                    Rows loaded from Kaggle CSV
+                </small>
+
+            </article>
+
+
+            <!-- Approved Loans -->
+            <article>
+
+                <label>Approved Loans</label>
+
+                <strong id="approved">—</strong>
+
+                <small>
+                    Historical training labels
+                </small>
+
+            </article>
+
+
+            <!-- Rejected Loans -->
+            <article>
+
+                <label>Rejected Loans</label>
+
+                <strong id="rejected">—</strong>
+
+                <small>
+                    Historical training labels
+                </small>
+
+            </article>
+
+
+            <!-- Model Accuracy -->
+            <article>
+
+                <label>Holdout Accuracy</label>
+
+                <strong id="accuracy">—</strong>
+
+                <small>
+                    Measured on held-out records
+                </small>
+
+            </article>
+
+        </section>
+
+
+        <!-- ======================================
+             DATA ANALYSIS AND VISUALISATIONS
+        ======================================= -->
+
+        <section id="analysis" class="charts">
+
+
+            <!-- Loan Status Distribution -->
+            <article>
+
+                <h3>Loan Status Distribution</h3>
+
+                <canvas id="statusChart"></canvas>
+
+            </article>
+
+
+            <!-- Applicant Gender -->
+            <article>
+
+                <h3>Applicant Gender</h3>
+
+                <canvas id="genderChart"></canvas>
+
+            </article>
+
+
+            <!-- Education Profile -->
+            <article>
+
+                <h3>Education Profile</h3>
+
+                <canvas id="educationChart"></canvas>
+
+            </article>
+
+
+            <!-- Property Area Analysis -->
+            <article>
+
+                <h3>Outcomes by Property Area</h3>
+
+                <canvas id="propertyChart"></canvas>
+
+            </article>
+
+
+            <!-- Missing Values Analysis -->
+            <article>
+
+                <h3>Missing Values by Field</h3>
+
+                <canvas id="missingChart"></canvas>
+
+            </article>
+
+        </section>
+
+
+        <!-- ======================================
+             LOAN PREDICTION AND RESULT SECTION
+        ======================================= -->
+
+        <section class="lower">
+
+
+            <!-- ==================================
+                 LOAN APPLICATION FORM
+            =================================== -->
+
+            <article id="predict" class="panel">
+
+                <h2>
+                    ✦　Loan Prediction
+                </h2>
+
+
+                <form id="loanForm">
+
+                    <div class="fields">
+
+
+                        <!-- Gender -->
+                        <label>
+
+                            Gender
+
+                            <select name="gender">
+
+                                <option>male</option>
+                                <option>female</option>
+
+                            </select>
+
+                        </label>
+
+
+                        <!-- Applicant Income -->
+                        <label>
+
+                            Applicant Income
+
+                            <input
+                                name="applicantIncome"
+                                type="number"
+                                min="0"
+                                value="5000"
+                                required
+                            >
+
+                        </label>
+
+
+                        <!-- Marital Status -->
+                        <label>
+
+                            Married
+
+                            <select name="married">
+
+                                <option>yes</option>
+                                <option>no</option>
+
+                            </select>
+
+                        </label>
+
+
+                        <!-- Co-applicant Income -->
+                        <label>
+
+                            Co-applicant Income
+
+                            <input
+                                name="coapplicantIncome"
+                                type="number"
+                                min="0"
+                                value="1500"
+                                required
+                            >
+
+                        </label>
+
+
+                        <!-- Dependents -->
+                        <label>
+
+                            Dependents
+
+                            <select name="dependents">
+
+                                <option>0</option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3+</option>
+
+                            </select>
+
+                        </label>
+
+
+                        <!-- Loan Amount -->
+                        <label>
+
+                            Loan Amount
+
+                            <input
+                                name="loanAmount"
+                                type="number"
+                                min="0"
+                                value="120"
+                                required
+                            >
+
+                        </label>
+
+
+                        <!-- Education -->
+                        <label>
+
+                            Education
+
+                            <select name="education">
+
+                                <option>graduate</option>
+                                <option>not_graduate</option>
+
+                            </select>
+
+                        </label>
+
+
+                        <!-- Loan Term -->
+                        <label>
+
+                            Loan Term (months)
+
+                            <input
+                                name="loanTerm"
+                                type="number"
+                                min="1"
+                                value="360"
+                                required
+                            >
+
+                        </label>
+
+
+                        <!-- Employment Status -->
+                        <label>
+
+                            Self Employed
+
+                            <select name="selfEmployed">
+
+                                <option>no</option>
+                                <option>yes</option>
+
+                            </select>
+
+                        </label>
+
+
+                        <!-- Credit History -->
+                        <label>
+
+                            Credit History
+
+                            <select name="creditHistory">
+
+                                <option value="1">
+                                    1 - Good
+                                </option>
+
+                                <option value="0">
+                                    0 - Poor
+                                </option>
+
+                            </select>
+
+                        </label>
+
+
+                        <!-- Property Area -->
+                        <label>
+
+                            Property Area
+
+                            <select name="propertyArea">
+
+                                <option>urban</option>
+                                <option>semiurban</option>
+                                <option>rural</option>
+
+                            </select>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- Prediction Button -->
+                    <button type="submit">
+                        Predict Loan Status
+                    </button>
+
+                </form>
+
+            </article>
+
+
+            <!-- ==================================
+                 PREDICTION RESULT PANEL
+            =================================== -->
+
+            <article class="panel result">
+
+                <h2>
+                    ▣　Prediction Result
+                </h2>
+
+
+                <div id="result">
+
+                    <div class="resulticon">
+                        ✓
+                    </div>
+
+                    <h2>
+                        Ready for assessment
+                    </h2>
+
+                    <p>
+                        Enter applicant details and select
+                        Predict Loan Status.
+                    </p>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <!-- ======================================
+             DATASET OVERVIEW
+        ======================================= -->
+
+        <section id="dataset" class="panel tablepanel">
+
+            <h2>
+                ▦　Dataset Preview
+
+                <small>
+                    (First 10 records)
+                </small>
+            </h2>
+
+
+            <div class="scroll">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Loan ID</th>
+                            <th>Gender</th>
+                            <th>Married</th>
+                            <th>Dependents</th>
+                            <th>Education</th>
+                            <th>Status</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="records">
+
+                        <!-- Dataset records populated by app.js -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- ======================================
+             MODEL PERFORMANCE EVALUATION
+        ======================================= -->
+
+        <section id="performance" class="panel">
+
+            <h2>
+                ◎　Model Performance (Holdout Test Set)
+            </h2>
+
+
+            <!-- Evaluation Metrics -->
+            <div class="metrics" id="metrics">
+
+                <!-- Metrics populated by app.js -->
+
+            </div>
+
+
+            <!-- Confusion Matrix -->
+            <h3>
+                Confusion Matrix
+            </h3>
+
+            <div id="matrix">
+
+                <!-- Confusion matrix populated by app.js -->
+
+            </div>
+
+
+            <!-- Evaluation Methodology -->
+            <p class="note">
+
+                The evaluation uses an ordered 80/20 holdout split
+                (every fifth row held out). Results are calculated
+                at startup from the supplied Kaggle training CSV.
+                The lecturer's separate out-of-sample dataset must
+                remain untouched until presentation day.
+
+            </p>
+
+        </section>
+
+
+        <!-- ======================================
+             ABOUT THE SYSTEM
+        ======================================= -->
+
+        <section id="about" class="panel">
+
+            <h2>
+                About this system
+            </h2>
+
+
+            <p>
+
+                Fundamentals of Artificial Intelligence. The
+                classifier is implemented in Prolog. The source
+                dataset is the Kaggle Loan Prediction Problem
+                training dataset (614 labelled rows, 12 input
+                features and Loan_Status target).
+
+            </p>
+
+
+            <p>
+
+                <b>Important:</b>
+
+                This dataset is a public benchmark, not Motz
+                Financial Services' own customer data. The model
+                may reflect historical bias and must not be used
+                as the sole basis for real lending decisions.
+
+            </p>
+
+        </section>
+
+
+        <!-- ======================================
+             APPLICATION FOOTER
+        ======================================= -->
+
+        <footer>
+
+            © Motz Financial Services 
+
+        </footer>
+
+
+    </main>
+
+
+    <!-- ==========================================
+         APPLICATION JAVASCRIPT
+    =========================================== -->
+
+<script src="/app.js"></script>
+</body>
+
+</html>
