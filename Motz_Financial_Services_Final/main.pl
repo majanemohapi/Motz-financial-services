@@ -521,25 +521,32 @@ feature_score(
     Score is PartScore + RemainingScore.
 
 predict_features(Features, Prediction, Confidence) :-
+    predict_features(Features, Prediction, Confidence, _, _).
 
+% Return comparable two-class model scores and derive the decision from
+% the larger score. These are model-relative scores, not calibrated odds.
+predict_features(
+    Features, Prediction, Confidence, ApprovedPercent, RejectedPercent
+) :-
     trained(Rows),
-
     class_count(Rows, approved, ApprovedCount),
     class_count(Rows, rejected, RejectedCount),
-
     ApprovedCount > 0,
     RejectedCount > 0,
-
-    class_score(Rows, approved, Features, ApprovedScore),
-    class_score(Rows, rejected, Features, RejectedScore),
-
-    (ApprovedScore >= RejectedScore
+    class_score(Rows, approved, Features, ApprovedLogScore),
+    class_score(Rows, rejected, Features, RejectedLogScore),
+    ScoreDifference is ApprovedLogScore - RejectedLogScore,
+    ( ScoreDifference >= 0
     -> Prediction = approved,
-       Difference is ApprovedScore - RejectedScore
-    ; Prediction = rejected,
-      Difference is RejectedScore - ApprovedScore),
-
-    Confidence is 1 / (1 + exp(-Difference)).
+       ApprovedShare is 1 / (1 + exp(-ScoreDifference))
+    ;  Prediction = rejected,
+       RejectedShare is 1 / (1 + exp(ScoreDifference)),
+       ApprovedShare is 1 - RejectedShare
+    ),
+    RejectedShare is 1 - ApprovedShare,
+    Confidence is max(ApprovedShare, RejectedShare),
+    ApprovedPercent is ApprovedShare * 100,
+    RejectedPercent is RejectedShare * 100.
 
 % ============================================================
 % MODEL EVALUATION
@@ -732,7 +739,9 @@ api_predict_request(Request) :-
         CreditHistory, PropertyArea, Features
     ),
 
-    (predict_features(Features, Prediction, Confidence)
+    (predict_features(
+        Features, Prediction, Confidence, ApprovedPercent, RejectedPercent
+    )
     -> true
     ; throw(error(
         prediction_failed,
@@ -740,14 +749,18 @@ api_predict_request(Request) :-
     ))),
 
     ConfidencePercent is Confidence * 100,
-
     format(string(ConfidenceText), '~1f%', [ConfidencePercent]),
+    format(string(ApprovedScoreText), '~1f%', [ApprovedPercent]),
+    format(string(RejectedScoreText), '~1f%', [RejectedPercent]),
 
     reply_json_dict(_{
         success: true,
         prediction: Prediction,
         confidence: ConfidenceText,
-        confidence_note: 'Relative Naive Bayes score; not a calibrated probability.',
+        approved_score_percent: ApprovedScoreText,
+        rejected_score_percent: RejectedScoreText,
+        decision_basis: 'The predicted class is the class with the higher model-relative score.',
+        confidence_note: 'These are relative Naive Bayes model scores, not calibrated real-world probabilities.',
         notice: 'This prediction is decision support and must be reviewed by a human.'
     }).
 
