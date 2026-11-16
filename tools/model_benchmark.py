@@ -62,6 +62,126 @@ def build_pipeline(model, numeric, categorical):
     return Pipeline([("preprocess", preprocess), ("model", model)])
 
 
+
+from sklearn.base import BaseEstimator, ClassifierMixin
+
+class PrologStyleNaiveBayes(BaseEstimator, ClassifierMixin):
+    """Python test replica of the categorical Naive Bayes rules in main.pl."""
+    DOMAINS = [3, 3, 5, 3, 3, 5, 5, 5, 4, 3, 4, 5]
+    COLUMNS = [
+        "Gender", "Married", "Dependents", "Education", "Self_Employed",
+        "ApplicantIncome", "CoapplicantIncome", "LoanAmount",
+        "Loan_Amount_Term", "Credit_History", "Property_Area",
+    ]
+
+    @staticmethod
+    def _category(value):
+        if pd.isna(value) or str(value).strip().lower() in {"", "na", "null", "n/a", "?"}:
+            return "missing"
+        value = str(value).strip().lower()
+        return "not graduate" if value == "not_graduate" else value
+
+    @staticmethod
+    def _number(value):
+        try:
+            number = float(value)
+            return number if np.isfinite(number) else None
+        except (TypeError, ValueError):
+            return None
+
+    @classmethod
+    def _features(cls, row):
+        gender = cls._category(row["Gender"])
+        married = cls._category(row["Married"])
+        dependents = cls._category(row["Dependents"])
+        if dependents in {"3", "3+"}:
+            dependents = "dep_3_plus"
+        education = cls._category(row["Education"])
+        self_employed = cls._category(row["Self_Employed"])
+        applicant = cls._number(row["ApplicantIncome"])
+        coapplicant = cls._number(row["CoapplicantIncome"])
+        loan_amount = cls._number(row["LoanAmount"])
+        term = cls._number(row["Loan_Amount_Term"])
+        credit = cls._number(row["Credit_History"])
+        property_area = cls._category(row["Property_Area"])
+
+        def income_band(v):
+            if v is None: return "missing"
+            if v < 2500: return "low"
+            if v < 6000: return "medium"
+            if v < 12000: return "high"
+            return "very_high"
+
+        def co_income_band(v):
+            if v is None: return "missing"
+            if v == 0: return "none"
+            if v < 2000: return "low"
+            if v < 5000: return "medium"
+            return "high"
+
+        def amount_band(v):
+            if v is None: return "missing"
+            if v < 100: return "low"
+            if v < 200: return "medium"
+            if v < 350: return "high"
+            return "very_high"
+
+        def term_band(v):
+            if v is None: return "missing"
+            if v < 180: return "short"
+            if v <= 360: return "standard"
+            return "long"
+
+        if credit not in (0, 1):
+            credit = "missing"
+        total_income = (applicant or 0) + (coapplicant or 0)
+        if applicant is None or coapplicant is None or loan_amount is None or term is None or term <= 0 or total_income <= 0:
+            burden = "missing"
+        else:
+            ratio = (loan_amount * 1000 / term) / total_income
+            burden = "low" if ratio <= .15 else "moderate" if ratio <= .30 else "high" if ratio <= .50 else "very_high"
+
+        return [
+            gender, married, dependents, education, self_employed,
+            income_band(applicant), co_income_band(coapplicant),
+            amount_band(loan_amount), term_band(term), credit,
+            property_area, burden,
+        ]
+
+    def fit(self, X, y):
+        self.classes_ = np.array(["N", "Y"])
+        self.rows_ = [self._features(row) for _, row in X.iterrows()]
+        self.labels_ = np.asarray(y)
+        self.class_rows_ = {
+            label: [row for row, actual in zip(self.rows_, self.labels_) if actual == label]
+            for label in self.classes_
+        }
+        return self
+
+    def predict_proba(self, X):
+        output = []
+        for _, raw in X.iterrows():
+            features = self._features(raw)
+            scores = []
+            total = len(self.labels_)
+            for label in self.classes_:
+                rows = self.class_rows_[label]
+                class_count = len(rows)
+                score = np.log(class_count / total)
+                for position, value in enumerate(features):
+                    count = sum(row[position] == value for row in rows)
+                    score += np.log((count + 1) / (class_count + self.DOMAINS[position]))
+                scores.append(score)
+            scores = np.asarray(scores)
+            probabilities = np.exp(scores - scores.max())
+            probabilities /= probabilities.sum()
+            output.append(probabilities)
+        return np.asarray(output)
+
+    def predict(self, X):
+        return self.classes_[np.argmax(self.predict_proba(X), axis=1)]
+
+
 def main():
     if not DATA.exists():
         raise FileNotFoundError(f"Dataset not found: {DATA}")
@@ -83,6 +203,7 @@ def main():
     }
 
     models = {
+        "prolog_naive_bayes_replica": None,
         "logistic_regression": LogisticRegression(max_iter=3000, random_state=RANDOM_STATE),
         "random_forest": RandomForestClassifier(
             n_estimators=500, min_samples_leaf=2, class_weight="balanced",
@@ -103,7 +224,11 @@ def main():
         X, y = df[columns], df[TARGET]
 
         for model_name, model in models.items():
-            pipeline = build_pipeline(model, numeric, categorical)
+            pipeline = (
+                PrologStyleNaiveBayes()
+                if model_name == "prolog_naive_bayes_replica"
+                else build_pipeline(model, numeric, categorical)
+            )
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 predictions = cross_val_predict(
