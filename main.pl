@@ -466,12 +466,13 @@ has_feature(Class, Position, Value, Features-Class) :-
 class_score(Rows, Class, Features, Score) :-
 
     class_count(Rows, Class, ClassCount),
+    length(Rows, Total),
 
+    Total > 0,
     ClassCount > 0,
 
-    % Balanced class weighting: give approved and rejected equal prior
-    % probability so the majority class does not dominate predictions.
-    Prior is log(0.5),
+    % Use the actual class distribution in the training data.
+    Prior is log(ClassCount / Total),
 
     feature_score(
         Rows,
@@ -503,7 +504,8 @@ feature_score(
         Count
     ),
 
-    Probability is (Count + 1) / (ClassCount + 4),
+    feature_domain_size(Position, DomainSize),
+    Probability is (Count + 1) / (ClassCount + DomainSize),
 
     PartScore is log(Probability),
 
@@ -519,6 +521,20 @@ feature_score(
     ),
 
     Score is PartScore + RemainingScore.
+
+% Number of possible values for each categorical feature.
+% These include the missing-value category used during data cleaning.
+feature_domain_size(1, 3).   % Gender
+feature_domain_size(2, 3).   % Married
+feature_domain_size(3, 5).   % Dependents
+feature_domain_size(4, 3).   % Education
+feature_domain_size(5, 3).   % Self employed
+feature_domain_size(6, 5).   % Applicant income band
+feature_domain_size(7, 5).   % Co-applicant income band
+feature_domain_size(8, 5).   % Loan amount band
+feature_domain_size(9, 4).   % Loan term band
+feature_domain_size(10, 3).  % Credit history
+feature_domain_size(11, 4).  % Property area
 
 predict_features(Features, Prediction, Confidence) :-
 
@@ -871,7 +887,7 @@ api_performance(_Request) :-
             fp: Metrics.fp,
             fn: Metrics.fn
         },
-        method: '80/20 holdout; balanced class priors (50/50) during training; holdout retains original class distribution.'
+        method: 'Ordered 80/20 holdout; natural class priors; feature-specific Laplace smoothing.'
     })
     ; reply_json_dict(_{
         error: 'Model evaluation is not available.'
