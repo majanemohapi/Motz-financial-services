@@ -301,6 +301,13 @@ loan_features(
     co_income_band(CoapplicantIncome, CoApplicantBand),
     loan_amount_band(LoanAmount, LoanAmountBand),
     term_band(LoanTerm, TermBand),
+    repayment_burden_band(
+        ApplicantIncome,
+        CoapplicantIncome,
+        LoanAmount,
+        LoanTerm,
+        RepaymentBurdenBand
+    ),
 
     Features = [
         Gender,
@@ -313,8 +320,32 @@ loan_features(
         LoanAmountBand,
         TermBand,
         CreditHistory,
-        PropertyArea
+        PropertyArea,
+        RepaymentBurdenBand
     ].
+
+% Derived feature: estimated monthly principal repayment divided by
+% combined monthly income. Kaggle LoanAmount is expressed in thousands.
+% This uses only fields already present in train.csv and the application form.
+repayment_burden_band(_, _, _, _, missing) :-
+    !.
+repayment_burden_band(ApplicantIncome, CoapplicantIncome, LoanAmount, LoanTerm, Band) :-
+    ( number(ApplicantIncome),
+      number(CoapplicantIncome),
+      number(LoanAmount),
+      number(LoanTerm),
+      LoanTerm > 0,
+      TotalIncome is ApplicantIncome + CoapplicantIncome,
+      TotalIncome > 0
+    -> MonthlyPrincipal is (LoanAmount * 1000) / LoanTerm,
+       Burden is MonthlyPrincipal / TotalIncome,
+       ( Burden =< 0.15 -> Band = low
+       ; Burden =< 0.30 -> Band = moderate
+       ; Burden =< 0.50 -> Band = high
+       ; Band = very_high
+       )
+    ; Band = missing
+    ).
 
 loan_to_features(
     loan(
@@ -405,18 +436,31 @@ train_and_evaluate :-
     ; throw(error(domain_error(training_classes,
         ApprovedCount-RejectedCount), _))),
 
+    % First fit only on the training partition and evaluate on unseen
+    % holdout rows. Never train on the holdout before calculating metrics.
     retractall(trained(_)),
     assertz(trained(TrainingRows)),
+    evaluate_rows(TestRows, HoldoutMetrics),
 
-    evaluate_rows(TestRows, Metrics),
+    % After the honest holdout evaluation, refit the production model on
+    % every labelled CSV row so no training examples are unnecessarily lost.
+    retractall(trained(_)),
+    assertz(trained(AllRows)),
+
+    put_dict(
+        _{training_records: Total, holdout_records: TestCount},
+        HoldoutMetrics,
+        Metrics
+    ),
 
     retractall(model_stats(_)),
     assertz(model_stats(Metrics)),
 
     format('~nMODEL TRAINING COMPLETE~n'),
     format('Total labelled records: ~w~n', [Total]),
-    format('Training records: ~w~n', [TrainingCount]),
+    format('Training records used for holdout evaluation: ~w~n', [TrainingCount]),
     format('Holdout records: ~w~n', [TestCount]),
+    format('Final production training records: ~w~n', [Total]),
     format('Holdout accuracy: ~2f%~n', [Metrics.accuracy]).
 
 % Reproducible stratified 80/20 holdout: each class is shuffled
@@ -533,6 +577,7 @@ feature_domain_size(8, 5).   % Loan amount band
 feature_domain_size(9, 4).   % Loan term band
 feature_domain_size(10, 3).  % Credit history
 feature_domain_size(11, 4).  % Property area
+feature_domain_size(12, 5).  % Estimated repayment burden band
 
 predict_features(Features, Prediction, Confidence) :-
 
@@ -907,7 +952,7 @@ api_performance(_Request) :-
             fp: Metrics.fp,
             fn: Metrics.fn
         },
-        method: 'Reproducible stratified 80/20 holdout; natural class priors; feature-specific Laplace smoothing.'
+        method: 'Reproducible stratified 80/20 holdout evaluation; final production model refitted on all labelled CSV rows; natural class priors; Laplace smoothing; includes a derived repayment-burden feature.'
     })
     ; reply_json_dict(_{
         error: 'Model evaluation is not available.'
