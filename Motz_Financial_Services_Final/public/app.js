@@ -368,11 +368,18 @@ if (loanForm) {
             let prediction = String(result.prediction || '').trim().toLowerCase();
 
             if (approvedScore !== null && rejectedScore !== null) {
-                if (Math.abs(approvedScore + rejectedScore - 100) > 1.1) {
-                    throw new Error('The prediction service returned inconsistent class scores. Please retry.');
+                if (
+                    approvedScore < 0 || approvedScore > 100 ||
+                    rejectedScore < 0 || rejectedScore > 100 ||
+                    Math.abs(approvedScore + rejectedScore - 100) > 1.1
+                ) {
+                    throw new Error('The prediction service returned invalid class scores. Please retry.');
                 }
-                prediction = approvedScore >= rejectedScore ? 'approved' : 'rejected';
             }
+
+            // The Prolog API is the source of truth for the class decision.
+            // Do not recompute it from percentages rounded to one decimal place:
+            // rounding can turn a close result into a false tie.
 
             if (!['approved', 'rejected'].includes(prediction)) {
                 throw new Error('The prediction service returned an unknown loan status.');
