@@ -621,11 +621,12 @@
             <!-- Evaluation Methodology -->
             <p class="note">
 
-                The evaluation uses an ordered 80/20 holdout split
-                (every fifth row held out). Results are calculated
-                at startup from the supplied Kaggle training CSV.
-                The lecturer's separate out-of-sample dataset must
-                remain untouched until presentation day.
+                The evaluation uses a deterministic, class-stratified
+                80/20 holdout split so approved and rejected cases are
+                represented in both training and testing. Results are
+                calculated at startup from the supplied Kaggle CSV.
+                This benchmark score is not a guarantee of future
+                lending accuracy; keep separate assessment data untouched.
 
             </p>
 
