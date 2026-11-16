@@ -1,0 +1,72 @@
+name: Motz Financial Services CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-smoke-test:
+    name: Build and test Prolog application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build production Docker image
+        run: docker build --tag motz-financial-services:ci .
+
+      - name: Start application container
+        run: |
+          docker run --detach --name motz-ci -p 8080:8080 motz-financial-services:ci
+
+      - name: Verify health and API endpoints
+        run: |
+          set -eu
+          cleanup() {
+            docker logs motz-ci || true
+            docker rm --force motz-ci >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --silent --show-error --fail http://127.0.0.1:8080/api/health --output /tmp/health.json; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+
+          test "$ready" -eq 1
+          python - <<'PY'
+          import json
+          import urllib.request
+
+          with open("/tmp/health.json", encoding="utf-8") as file:
+              health = json.load(file)
+
+          assert health.get("status") == "ok", health
+          assert health.get("records", 0) > 0, health
+
+          with urllib.request.urlopen("http://127.0.0.1:8080/api/performance", timeout=10) as response:
+              performance = json.load(response)
+
+          metrics = performance["metrics"]
+          confusion = performance["confusion"]
+          assert sum(confusion[key] for key in ("tp", "tn", "fp", "fn")) == metrics["holdout_records"], performance
+          assert all(key in metrics for key in ("accuracy", "precision", "recall", "specificity", "f1")), metrics
+
+          print("Health check passed:", health)
+          print("Model performance endpoint passed:", metrics)
+          PY
+
+          curl --silent --show-error --fail http://127.0.0.1:8080/ --output /dev/null
+          echo "Dashboard route passed."
