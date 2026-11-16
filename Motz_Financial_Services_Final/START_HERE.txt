@@ -1,0 +1,12 @@
+MOTZ FINANCIAL SERVICES - QUICK START
+
+1. Extract the entire ZIP file.
+2. Install SWI-Prolog for Windows. Ensure `swipl` works in a new VS Code terminal.
+3. Double-click RUN_MOTZ.bat in the extracted project folder.
+4. Wait for the Prolog console to say it loaded the Kaggle records.
+5. Your browser opens at http://localhost:8080. If it does not, open that address manually.
+6. Keep the black Prolog window open while using the dashboard.
+7. Press Ctrl+C in that window to stop the server.
+
+The application must be run from the folder containing main.pl and data\train.csv.
+The lecturer's separate out-of-sample data must not be copied into this folder.
