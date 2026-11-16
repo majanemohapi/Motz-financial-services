@@ -755,12 +755,15 @@ api_predict_request(Request) :-
         context(api_predict/1, 'The model is not trained or is missing a class.')
     ))),
 
+    % Convert the two Naive Bayes log scores into a model posterior.
+    % This is the probability implied by the model assumptions, not a
+    % statistically calibrated real-world lending probability.
     ConfidencePercent is Confidence * 100,
     (Prediction == approved
-    -> ApprovalScore = ConfidencePercent,
-       RejectionScore is 100 - ConfidencePercent
-    ; RejectionScore = ConfidencePercent,
-      ApprovalScore is 100 - ConfidencePercent),
+    -> ApprovalLikelihood = ConfidencePercent,
+       RejectionLikelihood is 100 - ConfidencePercent
+    ; RejectionLikelihood = ConfidencePercent,
+      ApprovalLikelihood is 100 - ConfidencePercent),
 
     format(string(ConfidenceText), '~1f%', [ConfidencePercent]),
 
@@ -768,11 +771,11 @@ api_predict_request(Request) :-
         success: true,
         prediction: Prediction,
         confidence: ConfidenceText,
-        approval_model_score: ApprovalScore,
-        rejection_model_score: RejectionScore,
-        confidence_note: 'These are relative Naive Bayes model scores, not calibrated real-world probabilities or guarantees.',
+        approval_likelihood: ApprovalLikelihood,
+        rejection_likelihood: RejectionLikelihood,
+        confidence_note: 'Model-estimated likelihood from Naive Bayes class scores. It is not independently calibrated and is not a guarantee of approval.',
         review_required: true,
-        notice: 'This prediction is educational decision support. A qualified human must review all information before any lending decision.'
+        notice: 'This is an estimate based on historical Kaggle records. A qualified human must review the application before any lending decision.'
     }).
 
 api_predict_error(Error) :-
